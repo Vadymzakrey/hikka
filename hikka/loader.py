@@ -253,9 +253,9 @@ ru_keys = 'ёйцукенгшщзхъфывапролджэячсмитьбю.Ё
 en_keys = "`qwertyuiop[]asdfghjkl;'zxcvbnm,./~@#$%^&QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
 
 BASE_DIR = (
-    "/data"
-    if "DOCKER" in os.environ
-    else os.path.normpath(os.path.join(utils.get_base_dir(), ".."))
+    os.environ.get("DATA_DIR")
+    or ("/app/data" if "DYNO" in os.environ else None)
+    or ("/data" if "DOCKER" in os.environ else os.path.normpath(os.path.join(utils.get_base_dir(), "..")))
 )
 
 LOADED_MODULES_DIR = os.path.join(BASE_DIR, "loaded_modules")
