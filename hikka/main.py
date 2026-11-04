@@ -75,9 +75,9 @@ else:
     web_available = True
 
 BASE_DIR = (
-    "/data"
-    if "DOCKER" in os.environ
-    else os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    os.environ.get("DATA_DIR")
+    or ("/app/data" if "DYNO" in os.environ else None)
+    or ("/data" if "DOCKER" in os.environ else os.path.normpath(os.path.join(utils.get_base_dir(), "..")))
 )
 
 BASE_PATH = Path(BASE_DIR)
