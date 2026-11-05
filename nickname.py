@@ -22,6 +22,7 @@ class KyivTimeNickMod(loader.Module):
             "TIMEZONE", "Europe/Kyiv", "Твой часовой пояс."
         )
         self.active = False
+        self._task = None
 
     async def client_ready(self, client, db):
         self.client = client
@@ -31,11 +32,13 @@ class KyivTimeNickMod(loader.Module):
         """Запустить или остановить циклическую смену времени в нике"""
         if self.active:
             self.active = False
+            if self._task and not self._task.done():
+                self._task.cancel()
             await utils.answer(message, self.strings["stopped"])
         else:
             self.active = True
+            self._task = asyncio.create_task(self.time_loop())
             await utils.answer(message, self.strings["started"])
-            self.bot.loop.create_task(self.time_loop())
 
     async def time_loop(self):
         while self.active:
@@ -46,9 +49,14 @@ class KyivTimeNickMod(loader.Module):
                 
                 # Меняем First Name (Имя) в Telegram
                 await self.client(UpdateProfileRequest(first_name=new_name))
+            except asyncio.CancelledError:
+                break
             except Exception as e:
                 logger.error(f"Ошибка обновления ника: {e}")
             
-            # Задержка 60 секунд (безопасно для API Telegram)
-            await asyncio.sleep(60)
-          
+            # Задержка 60 секунд
+            try:
+                await asyncio.sleep(60)
+            except asyncio.CancelledError:
+                break
+
